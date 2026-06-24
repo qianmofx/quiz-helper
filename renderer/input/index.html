@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#fff;
+  --surface:#f8f9fa;
+  --border:#e8eaed;
+  --border-focus:#f97316;
+  --text-primary:#1a1a2e;
+  --text-secondary:#5f6368;
+  --text-tertiary:#9aa0a6;
+  --accent:#f97316;
+  --accent-hover:#ea6b0e;
+  --accent-light:rgba(249,115,22,0.08);
+  --radius:8px;
+  --shadow:0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+}
+body{
+  font-family:'Microsoft YaHei','PingFang SC','Segoe UI',sans-serif;
+  background:var(--bg);color:var(--text-primary);
+  height:100vh;display:flex;flex-direction:column;
+  border:1px solid var(--border);border-radius:12px;overflow:hidden;
+  user-select:none;box-shadow:0 8px 32px rgba(0,0,0,0.12);
+}
+.titlebar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;background:var(--bg);
+  border-bottom:1px solid var(--border);
+  -webkit-app-region:drag;
+}
+.titlebar-title{font-size:14px;font-weight:600;color:var(--text-primary);letter-spacing:0.3px}
+.titlebar-badge{
+  font-size:11px;font-weight:600;text-transform:uppercase;
+  background:var(--accent-light);color:var(--accent);
+  padding:2px 8px;border-radius:4px;letter-spacing:0.5px;
+  margin-left:8px;
+}
+.close-btn{
+  width:28px;height:28px;border-radius:7px;border:none;
+  background:transparent;color:var(--text-tertiary);font-size:15px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  -webkit-app-region:no-drag;transition:all .15s;
+}
+.close-btn:hover{background:#fce8e6;color:#d93025}
+.body{flex:1;padding:14px;display:flex;flex-direction:column;gap:8px}
+.body-label{
+  font-size:12px;color:var(--text-secondary);font-weight:500;
+  display:flex;align-items:center;gap:6px;
+}
+.body-label kbd{
+  font-family:inherit;font-size:11px;background:var(--surface);
+  border:1px solid var(--border);border-radius:4px;
+  padding:0 5px;color:var(--text-tertiary);
+}
+textarea{
+  flex:1;background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--radius);padding:10px;
+  color:var(--text-primary);font-family:inherit;
+  font-size:15px;resize:none;line-height:1.5;outline:none;
+  transition:border-color .2s,background .2s,box-shadow .2s;
+}
+textarea:focus{
+  border-color:var(--accent);background:var(--bg);
+  box-shadow:0 0 0 3px rgba(249,115,22,0.08);
+}
+textarea::placeholder{color:var(--text-tertiary)}
+.actions{
+  display:flex;gap:8px;justify-content:flex-end;align-items:center;
+  padding-top:2px;
+}
+.btn{
+  padding:7px 18px;border-radius:var(--radius);border:1px solid var(--border);
+  font-size:13px;cursor:pointer;font-family:inherit;
+  transition:all .15s;font-weight:500;
+}
+.btn-ghost{
+  background:transparent;color:var(--text-secondary);
+}
+.btn-ghost:hover{background:var(--surface);color:var(--text-primary)}
+.btn-primary{
+  background:var(--accent);border-color:var(--accent);color:#fff;
+}
+.btn-primary:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+.btn-primary:disabled{opacity:0.4;cursor:default;background:var(--accent);border-color:var(--accent);color:#fff}
+.char-count{
+  font-size:12px;color:var(--text-tertiary);margin-right:auto;
+  font-feature-settings:"tnum";font-variant-numeric:tabular-nums;
+}
+</style>
+</head>
+<body>
+<div class="titlebar">
+  <div style="display:flex;align-items:center">
+    <span class="titlebar-title">输入题目</span>
+    <span class="titlebar-badge">手动</span>
+  </div>
+  <button class="close-btn" id="closeBtn">✕</button>
+</div>
+<div class="body">
+  <div class="body-label">
+    粘贴或输入题目内容
+    <kbd>⌃↵</kbd> 提交
+  </div>
+  <textarea id="input" placeholder="在此输入题目…" autofocus></textarea>
+  <div class="actions">
+    <span class="char-count" id="charCount">0 字</span>
+    <button class="btn btn-ghost" id="clearBtn">清空</button>
+    <button class="btn btn-primary" id="submitBtn" disabled>提交解答</button>
+  </div>
+</div>
+<script>
+const input=document.getElementById('input')
+const submitBtn=document.getElementById('submitBtn')
+const charCount=document.getElementById('charCount')
+input.addEventListener('input',()=>{
+  const len=input.value.trim().length
+  submitBtn.disabled=len===0
+  charCount.textContent=`${len} 字`
+})
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')window.api.closeInput()
+  if(e.key==='Enter'&&e.ctrlKey)submit()
+})
+document.getElementById('submitBtn').addEventListener('click',submit)
+document.getElementById('clearBtn').addEventListener('click',()=>{input.value='';submitBtn.disabled=true;charCount.textContent='0 字';input.focus()})
+document.getElementById('closeBtn').addEventListener('click',()=>window.api.closeInput())
+function submit(){const text=input.value.trim();if(text)window.api.submitText(text)}
+window.addEventListener('load',()=>{setTimeout(()=>input.focus(),100)})
+</script>
+</body>
+</html>

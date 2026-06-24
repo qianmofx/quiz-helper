@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#fff;
+  --surface:#f8f9fa;
+  --border:#e8eaed;
+  --text-primary:#1a1a2e;
+  --text-secondary:#5f6368;
+  --text-tertiary:#9aa0a6;
+  --accent:#10b981;
+  --radius:8px;
+}
+body{
+  font-family:'Microsoft YaHei','PingFang SC','Segoe UI',sans-serif;
+  background:var(--bg);color:var(--text-primary);
+  height:100vh;display:flex;flex-direction:column;
+  border:1px solid var(--border);border-radius:12px;overflow:hidden;
+  user-select:none;
+}
+.titlebar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;background:var(--bg);
+  border-bottom:1px solid var(--border);
+  -webkit-app-region:drag;
+}
+.titlebar-left{display:flex;align-items:center;gap:8px}
+.titlebar-title{font-size:14px;font-weight:600;color:var(--text-primary)}
+.titlebar-source{font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;background:var(--accent);color:#fff}
+.close-btn{
+  width:28px;height:28px;border-radius:7px;border:none;
+  background:transparent;color:var(--text-tertiary);font-size:14px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  -webkit-app-region:no-drag;
+}
+.close-btn:hover{background:#fce8e6;color:#d93025}
+.body{flex:1;padding:8px 10px 10px;display:flex;flex-direction:column;gap:6px}
+textarea{
+  flex:1;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:8px 10px;
+  color:var(--text-primary);
+  font-family:'Microsoft YaHei','SimSun','NSimSun','MingLiU',sans-serif;
+  font-size:14px;resize:none;line-height:1.45;outline:none;
+  letter-spacing:0;word-spacing:0;font-kerning:none;
+  font-variant-east-asian:normal;font-stretch:normal;
+}
+textarea:focus{border-color:var(--accent);background:var(--bg)}
+.actions{display:flex;gap:8px;justify-content:flex-end}
+.btn{
+  padding:6px 14px;border-radius:var(--radius);border:1px solid var(--border);
+  font-size:12px;cursor:pointer;font-family:inherit;
+  font-weight:500;
+  transition:all .15s;
+}
+.btn-ghost{background:transparent;color:var(--text-secondary)}
+.btn-ghost:hover{background:var(--surface)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-primary:hover{background:#059669;border-color:#059669}
+</style>
+</head>
+<body>
+<div class="titlebar">
+  <div class="titlebar-left">
+    <span class="titlebar-title">确认识别结果</span>
+    <span class="titlebar-source" id="sourceLabel">Tesseract</span>
+  </div>
+  <button class="close-btn" onclick="window.api.cancelOcr()">✕</button>
+</div>
+<div class="body">
+  <textarea id="ocrText" autofocus></textarea>
+  <div class="actions">
+    <button class="btn btn-ghost" onclick="window.api.cancelOcr()">取消</button>
+    <button class="btn btn-primary" onclick="confirm()">确认并解答</button>
+  </div>
+</div>
+<script>
+const ocrText=document.getElementById('ocrText')
+const sourceLabel=document.getElementById('sourceLabel')
+// 归一化文本：全角ASCII/数字/字母→半角，合并多余空白
+function normalizeText(s){
+  return s.replace(/[！-～]/g,ch=>String.fromCharCode(ch.charCodeAt(0)-0xFEE0))
+         .replace(/　/g,' ').replace(/[ \t]+/g,' ').replace(/\n{3,}/g,'\n\n').trim()
+}
+window.api.onOcrResult(({text,source})=>{
+  ocrText.value=normalizeText(text)
+  ocrText.focus();ocrText.select()
+})
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')window.api.cancelOcr()
+  if(e.key==='Enter'&&e.ctrlKey)confirm()
+})
+function confirm(){const text=ocrText.value.trim();if(text)window.api.confirmOcr(text)}
+</script>
+</body>
+</html>

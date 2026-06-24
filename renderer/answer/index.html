@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<script src="../../node_modules/marked/marked.min.js"></script>
+<link rel="stylesheet" href="../../node_modules/katex/dist/katex.min.css">
+<script src="../../node_modules/katex/dist/katex.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#fff;
+  --surface:#f8f9fa;
+  --border:#e8eaed;
+  --border-focus:#f97316;
+  --text-primary:#1a1a2e;
+  --text-secondary:#5f6368;
+  --text-tertiary:#9aa0a6;
+  --accent:#f97316;
+  --accent-hover:#ea6b0e;
+  --accent-light:rgba(249,115,22,0.08);
+  --radius:8px;
+  --radius-sm:6px;
+  --shadow:0 8px 32px rgba(0,0,0,0.12);
+  --font-family:'Microsoft YaHei','PingFang SC','Segoe UI',sans-serif;
+  --font-mono:'SF Mono','JetBrains Mono','Consolas',monospace;
+}
+body{
+  font-family:var(--font-family);
+  background:var(--bg);color:var(--text-primary);
+  height:100vh;display:flex;flex-direction:column;
+  border:1px solid var(--border);border-radius:12px;overflow:hidden;
+  box-shadow:var(--shadow);
+}
+.titlebar{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 16px;background:var(--bg);
+  border-bottom:1px solid var(--border);flex-shrink:0;
+  -webkit-app-region:drag;
+}
+.title{font-size:14px;color:var(--text-tertiary);flex:1;font-weight:500}
+.titlebar-btns{display:flex;gap:4px;-webkit-app-region:no-drag}
+.tbtn{
+  padding:5px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);
+  font-size:12px;cursor:pointer;font-family:inherit;
+  background:var(--bg);color:var(--text-secondary);transition:all .15s;
+  white-space:nowrap;font-weight:500;
+}
+.tbtn:hover{background:var(--surface);color:var(--text-primary);border-color:#d0d2d6}
+.tbtn.copy:hover{color:#10b981;border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.04)}
+.tbtn.regen:hover{color:var(--accent);border-color:rgba(249,115,22,.3);background:var(--accent-light)}
+.tbtn:disabled{opacity:0.4;cursor:default}
+.close-tbtn{
+  width:28px;height:28px;border-radius:7px;border:none;
+  background:transparent;color:var(--text-tertiary);font-size:14px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.close-tbtn:hover{background:#fce8e6;color:#d93025}
+
+/* Answer content area */
+.answer-area{
+  flex:1;display:flex;flex-direction:column;
+  position:relative;overflow:hidden;min-height:0;
+}
+.answer-wrap{
+  flex:1;overflow-y:auto;padding:16px 20px;
+  line-height:1.85;font-size:15px;color:var(--text-primary);
+}
+.answer-wrap::-webkit-scrollbar{width:5px}
+.answer-wrap::-webkit-scrollbar-thumb{background:#ddd;border-radius:3px}
+
+.scroll-bottom-btn{
+  position:absolute;bottom:20px;right:22px;z-index:10;
+  width:36px;height:36px;border-radius:50%;
+  background:#fff;border:1px solid var(--border);
+  color:var(--text-secondary);font-size:18px;cursor:pointer;
+  display:none;align-items:center;justify-content:center;
+  box-shadow:0 2px 8px rgba(0,0,0,0.12);
+  line-height:1;padding:0;font-family:inherit;
+  transition:all .2s;
+}
+.scroll-bottom-btn.visible{display:flex}
+.scroll-bottom-btn:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-light);box-shadow:0 4px 12px rgba(249,115,22,0.2)}
+
+/* Markdown styling */
+.answer-wrap h1,.answer-wrap h2,.answer-wrap h3{
+  color:var(--text-primary);margin:20px 0 10px;font-weight:700;
+  letter-spacing:-0.02em;
+}
+.answer-wrap h1{font-size:18px;padding-bottom:6px;border-bottom:1.5px solid var(--border)}
+.answer-wrap h2{font-size:16px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+.answer-wrap h3{font-size:15px}
+.answer-wrap p{margin:10px 0;color:var(--text-secondary);line-height:1.8}
+.answer-wrap strong{color:var(--text-primary);font-weight:600}
+.answer-wrap a{color:var(--accent);text-decoration:none}
+.answer-wrap a:hover{text-decoration:underline}
+.answer-wrap code{
+  background:#f1f3f4;border:1px solid var(--border);
+  border-radius:5px;padding:1px 7px;
+  font-family:var(--font-mono);
+  font-size:12.5px;color:#d63384;
+}
+.answer-wrap pre{
+  background:#f8f9fa;border:1px solid var(--border);
+  border-radius:var(--radius);padding:14px 16px;margin:14px 0;overflow-x:auto;
+  position:relative;
+}
+.answer-wrap pre code{
+  background:none;border:none;padding:0;font-size:13px;color:#374151;
+  line-height:1.65;
+}
+.answer-wrap ul,.answer-wrap ol{padding-left:22px;margin:10px 0}
+.answer-wrap li{margin:5px 0;color:var(--text-secondary)}
+.answer-wrap li::marker{color:var(--accent)}
+.answer-wrap blockquote{
+  border-left:3px solid var(--accent);padding:8px 0 8px 16px;
+  margin:14px 0;background:#faf9f8;border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+  color:var(--text-secondary);
+}
+.answer-wrap hr{border:none;border-top:1px solid var(--border);margin:16px 0}
+.answer-wrap table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13px}
+.answer-wrap th,.answer-wrap td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+.answer-wrap th{background:var(--surface);font-weight:600;color:var(--text-primary)}
+.answer-wrap td{color:var(--text-secondary)}
+.answer-wrap img{max-width:100%;border-radius:var(--radius-sm)}
+
+/* KaTeX math rendering */
+.answer-wrap .katex{font-size:1.1em}
+.answer-wrap .katex-display{margin:14px 0;overflow-x:auto;overflow-y:hidden;padding:4px 0}
+.answer-wrap .katex-display::-webkit-scrollbar{height:4px}
+.answer-wrap .katex-display::-webkit-scrollbar-thumb{background:#ddd;border-radius:2px}
+
+.cursor{
+  display:inline-block;width:2.5px;height:16px;
+  background:var(--accent);margin-left:2px;vertical-align:middle;
+  animation:blink .9s steps(2) infinite;
+}
+@keyframes blink{to{opacity:0}}
+.answer-wrap.centered{display:flex;align-items:center;justify-content:center;min-height:100%}
+
+.status-bar{
+  padding:8px 16px;font-size:12px;color:var(--text-tertiary);
+  border-top:1px solid var(--border);flex-shrink:0;
+  background:var(--surface);display:flex;justify-content:space-between;
+  font-feature-settings:"tnum";font-variant-numeric:tabular-nums;
+}
+.follow-area{
+  border-top:1px solid var(--border);padding:10px 16px;
+  flex-shrink:0;display:flex;gap:8px;align-items:center;
+  background:var(--bg);
+}
+.follow-input{
+  flex:1;background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--radius);padding:8px 12px;
+  color:var(--text-primary);font-family:inherit;
+  font-size:14px;resize:none;outline:none;line-height:1.5;
+  min-height:36px;max-height:96px;overflow-y:auto;
+  transition:border-color .2s,background .2s,box-shadow .2s;
+}
+.follow-input:focus{border-color:var(--accent);background:var(--bg);box-shadow:0 0 0 3px rgba(249,115,22,0.08)}
+.follow-input::placeholder{color:var(--text-tertiary)}
+.send-btn{
+  width:36px;height:36px;border-radius:var(--radius);border:1px solid var(--border);
+  background:var(--bg);color:var(--text-tertiary);font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:all .15s;
+}
+.send-btn:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+
+.error-msg{color:#d93025;padding:12px 16px;font-size:14px;background:#fef7f6;border-radius:var(--radius);margin:8px 0}
+.thinking{color:var(--text-tertiary);font-size:14px;display:flex;align-items:center;gap:6px}
+
+/* word count badge */
+.word-count{color:var(--text-tertiary)}
+</style>
+</head>
+<body>
+<div class="titlebar">
+  <span class="title">AI 解答</span>
+  <div class="titlebar-btns">
+    <button class="tbtn copy" id="copyBtn">复制</button>
+    <button class="tbtn regen" id="regenBtn">重新生成</button>
+    <button class="close-tbtn" onclick="window.api.closeAnswer()">✕</button>
+  </div>
+</div>
+
+<div class="answer-area">
+  <div class="answer-wrap centered" id="answerWrap">
+    <span class="thinking">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1.5s linear infinite">
+        <line x1="12" y1="2" x2="12" y2="6"></line>
+        <line x1="12" y1="18" x2="12" y2="22"></line>
+        <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+        <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+        <line x1="2" y1="12" x2="6" y2="12"></line>
+        <line x1="18" y1="12" x2="22" y2="12"></line>
+        <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+        <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+      </svg>
+      正在思考<span class="cursor"></span>
+    </span>
+  </div>
+  <button class="scroll-bottom-btn" id="scrollBtn">↓</button>
+</div>
+
+<div class="status-bar">
+  <span id="statusText">等待 AI 响应…</span>
+  <span style="display:flex;align-items:center;gap:6px">
+    <span class="word-count" id="wordCount"></span>
+  </span>
+</div>
+
+<div class="follow-area">
+  <textarea class="follow-input" id="followInput" placeholder="继续追问…" rows="1"></textarea>
+  <button class="send-btn" id="sendBtn" title="发送 (Enter)">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+  </button>
+</div>
+
+<style>
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+
+<script>
+const answerWrap=document.getElementById('answerWrap')
+const statusText=document.getElementById('statusText')
+const wordCount=document.getElementById('wordCount')
+const followInput=document.getElementById('followInput')
+const copyBtn=document.getElementById('copyBtn')
+const regenBtn=document.getElementById('regenBtn')
+const scrollBtn=document.getElementById('scrollBtn')
+
+let buffer='',isStreaming=false,rafId=null,renderPending=false
+
+function renderMath(text){
+  // 块级数学 $$...$$
+  text=text.replace(/\$\$([\s\S]+?)\$\$/g,(_,m)=>{
+    try{return katex.renderToString(m.trim(),{displayMode:true,throwOnError:false})}
+    catch(e){return '$$'+m+'$$'}
+  })
+  // 行内数学 $...$
+  text=text.replace(/\$([^\n$]+?)\$/g,(_,m)=>{
+    try{return katex.renderToString(m.trim(),{displayMode:false,throwOnError:false})}
+    catch(e){return '$'+m+'$'}
+  })
+  return text
+}
+
+function scrollToBottom(){
+  answerWrap.scrollTop=answerWrap.scrollHeight
+}
+
+function scheduleRender(){
+  if(renderPending)return;renderPending=true
+  cancelAnimationFrame(rafId)
+  rafId=requestAnimationFrame(()=>{
+    renderPending=false
+    answerWrap.classList.remove('centered')
+    answerWrap.innerHTML=marked.parse(renderMath(buffer))+'<span class="cursor"></span>'
+  })
+}
+
+window.api.onAiChunk(chunk=>{
+  if(chunk===''){
+    buffer='';isStreaming=true
+    answerWrap.classList.add('centered')
+    answerWrap.innerHTML='<span class="thinking"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1.5s linear infinite"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>正在思考<span class="cursor"></span></span>'
+    statusText.textContent='正在生成…'
+    wordCount.textContent=''
+    copyBtn.disabled=true;regenBtn.disabled=true;return
+  }
+  buffer+=chunk;scheduleRender()
+})
+
+window.api.onAiDone(()=>{
+  isStreaming=false;cancelAnimationFrame(rafId)
+  answerWrap.classList.remove('centered')
+  answerWrap.innerHTML=marked.parse(renderMath(buffer))
+  statusText.textContent='生成完成'
+  const chars=buffer.length
+  wordCount.textContent=`${chars} 字`
+  copyBtn.disabled=false;regenBtn.disabled=false
+})
+
+window.api.onAiError(msg=>{
+  isStreaming=false
+  answerWrap.classList.remove('centered')
+  answerWrap.innerHTML=`<div class="error-msg">⚠ ${msg}</div>`
+  statusText.textContent='请求失败'
+  wordCount.textContent=''
+  regenBtn.disabled=false
+})
+
+scrollBtn.addEventListener('click',scrollToBottom)
+answerWrap.addEventListener('scroll',()=>{
+  const dist=answerWrap.scrollHeight-answerWrap.scrollTop-answerWrap.clientHeight
+  scrollBtn.classList.toggle('visible',dist>80)
+})
+
+copyBtn.addEventListener('click',()=>{
+  window.api.copyText(buffer)
+  copyBtn.textContent='已复制 ✓'
+  copyBtn.style.color='#10b981'
+  copyBtn.style.borderColor='rgba(16,185,129,.3)'
+  setTimeout(()=>{
+    copyBtn.textContent='复制'
+    copyBtn.style.color=''
+    copyBtn.style.borderColor=''
+  },1500)
+})
+regenBtn.addEventListener('click',()=>{buffer='';window.api.regenerate()})
+
+followInput.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendFollowUp()}
+})
+document.getElementById('sendBtn').addEventListener('click',sendFollowUp)
+function sendFollowUp(){
+  const text=followInput.value.trim()
+  if(!text||isStreaming)return
+  followInput.value='';buffer='';window.api.followUp(text)
+  followInput.style.height='auto'
+}
+followInput.addEventListener('input',()=>{
+  followInput.style.height='auto'
+  followInput.style.height=Math.min(followInput.scrollHeight,96)+'px'
+})
+document.addEventListener('keydown',e=>{if(e.key==='Escape')window.api.closeAnswer()})
+</script>
+</body>
+</html>

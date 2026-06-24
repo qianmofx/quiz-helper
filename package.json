@@ -1,0 +1,40 @@
+{
+  "name": "answer-assistant",
+  "version": "1.0.0",
+  "description": "答题助手 - 截图识别 + AI 解答",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win"
+  },
+  "build": {
+    "appId": "com.answer.assistant",
+    "productName": "答题助手",
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "files": [
+      "**/*",
+      "!node_modules/.cache"
+    ]
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.0",
+    "electron-store": "^8.2.0",
+    "katex": "^0.17.0",
+    "marked": "^12.0.0",
+    "openai": "^4.68.0",
+    "tesseract.js": "^7.0.0",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^25.0.0"
+  }
+}
